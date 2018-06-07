@@ -16,7 +16,8 @@ def remove_quotes(_str):
     if _str.startswith('"'):
         _str = _str[1:]
     if _str.endswith('"'):
-        _str = _str[:-1]    
+        _str = _str[:-1]
+    return _str
 
 
 def sepatare_server_names(directive_name, dir_inst, parse_dict):
@@ -34,10 +35,9 @@ def separate_proxies(directive_name, dir_inst, parse_dict):
         tmp_lst = list(
             filter(None, re.split(r'(?:(?<!\\) )', dir_inst.args))
         )
-        remove_quotes(tmp_lst[0])
         parse_dict['Proxies'].append({
             directive_name: {
-                "From": tmp_lst[0],
+                "From": remove_quotes(tmp_lst[0]),
                 "To": tmp_lst[1]
             }
         })
@@ -47,10 +47,9 @@ def order_rewrites(directive_name, dict_section, dir_inst):
     tmp_lst = list(
         filter(None, re.split(r'(?:(?<!\\) )', dir_inst.args))
     )
-    remove_quotes(tmp_lst[0])
     parse_dict[dict_section].append({
         directive_name: {
-            "From": tmp_lst[0],
+            "From": remove_quotes(tmp_lst[0]),
             "To": tmp_lst[1],
             "Flags": tmp_lst[2] if len(tmp_lst) > 2 else []
         }
@@ -72,7 +71,7 @@ def separate_rewrites(directive_name, dir_inst, parse_dict):
 def separate_balancers(tag_inst, parse_dict):
     if 'Proxy' in tag_inst.open_tag:
         tmp_dict = {}
-        tmp_dict["Name"] = tag_inst.open_tag.split(' ')[1][:-1]
+        tmp_dict["Name"] = remove_quotes(tag_inst.open_tag.split(' ')[1][:-1])
         tmp_dict["BalancerMembers"] = []
         for directive in tag_inst:
             if isinstance(directive, parse_config.Directive):
