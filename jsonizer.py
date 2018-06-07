@@ -24,6 +24,11 @@ def sepatare_server_names(directive_name, dir_inst, parse_dict):
         parse_dict[directive_name] = dir_inst.args
 
 
+def sepatare_server_aliases(directive_name, dir_inst, parse_dict):
+    if directive_name in dir_inst.name:
+        parse_dict["Server Aliases"].append(dir_inst.args)
+
+
 def separate_proxies(directive_name, dir_inst, parse_dict):
     if directive_name in dir_inst.name:
         tmp_lst = list(
@@ -90,7 +95,7 @@ for i in apache_config:
             for j in i:
                 if isinstance(j, parse_config.Directive):
                     sepatare_server_names("ServerName", j, parse_dict)
-                    sepatare_server_names("ServerAlias", j, parse_dict)
+                    sepatare_server_aliases("ServerAlias", j, parse_dict)
                     separate_proxies("ProxyPass", j, parse_dict)
                     separate_proxies("ProxyPassReverse", j, parse_dict)
                     separate_rewrites("RewriteRule", j, parse_dict)
