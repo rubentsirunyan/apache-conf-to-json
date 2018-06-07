@@ -12,6 +12,13 @@ apache_parse_obj = parse_config.ParseApacheConfig(
 apache_config = apache_parse_obj.parse_config()
 
 
+def remove_quotes(_str):
+    if _str.startswith('"'):
+        _str = _str[1:]
+    if _str.endswith('"'):
+        _str = _str[:-1]    
+
+
 def sepatare_server_names(directive_name, dir_inst, parse_dict):
     if directive_name in dir_inst.name:
         parse_dict[directive_name] = dir_inst.args
@@ -22,6 +29,7 @@ def separate_proxies(directive_name, dir_inst, parse_dict):
         tmp_lst = list(
             filter(None, re.split(r'(?:(?<!\\) )', dir_inst.args))
         )
+        remove_quotes(tmp_lst[0])
         parse_dict['Proxies'].append({
             directive_name: {
                 "From": tmp_lst[0],
@@ -34,10 +42,7 @@ def order_rewrites(directive_name, dict_section, dir_inst):
     tmp_lst = list(
         filter(None, re.split(r'(?:(?<!\\) )', dir_inst.args))
     )
-    if tmp_lst[0].startswith('"'):
-        tmp_lst[0] = tmp_lst[0][1:]
-    if tmp_lst[0].endswith('"'):
-        tmp_lst[0] = tmp_lst[0][:-1]
+    remove_quotes(tmp_lst[0])
     parse_dict[dict_section].append({
         directive_name: {
             "From": tmp_lst[0],
@@ -55,8 +60,8 @@ def separate_rewrites(directive_name, dir_inst, parse_dict):
             flags = flags[0]
         if 'P' in flags:
             order_rewrites("RewriteRule", "Proxies", dir_inst)
-        else:
-            order_rewrites("RewriteRule", "Rewrites", dir_inst)
+        # else:
+        #     order_rewrites("RewriteRule", "Rewrites", dir_inst)
 
 
 def separate_balancers(tag_inst, parse_dict):
