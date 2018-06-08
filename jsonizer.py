@@ -6,6 +6,8 @@ import sys
 
 APACHE_CONF_FILE = sys.argv[1]
 OUTPUT_FILE = sys.argv[2]
+DESIRED_VHOST = str(sys.argv[3])
+
 
 apache_parse_obj = parse_config.ParseApacheConfig(
     apache_config_path=APACHE_CONF_FILE)
@@ -94,6 +96,10 @@ for i in apache_config:
             parse_dict['Rewrites'] = []
             for j in i:
                 if isinstance(j, parse_config.Directive):
+                    if j.name == "ServerName":
+                        print("Started to parse {}".format(j.args))
+                        if j.args != DESIRED_VHOST:
+                            break
                     sepatare_server_names("ServerName", j, parse_dict)
                     sepatare_server_aliases("ServerAlias", j, parse_dict)
                     separate_proxies("ProxyPass", j, parse_dict)
@@ -102,8 +108,8 @@ for i in apache_config:
 
                 if isinstance(j, parse_config.NestedTags):
                     separate_balancers(j, parse_dict)
-
-            vhost_list.append(parse_dict)
+            else:
+                vhost_list.append(parse_dict)
 
     except AttributeError:
         continue
