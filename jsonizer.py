@@ -1,14 +1,26 @@
 from parse_apache_configs import parse_config
 import json
 import re
-import sys
 import pickle
+import argparse
 
 
-APACHE_CONF_FILE = sys.argv[1]
-OUTPUT_FILE = sys.argv[2]
-DESIRED_VHOST = str(sys.argv[3])
-FROM_CACHE = False if int(sys.argv[4]) == 0 else True
+parser = argparse.ArgumentParser(description='Jsonify Apache configuration.')
+parser.add_argument("-i", "--input", dest="input",
+                    help="Apache config file path.", nargs='?')
+parser.add_argument("-o", "--output", dest="output",
+                    help="Output file.", nargs='?')
+parser.add_argument("-s", "--servername", dest="servername",
+                    help="The desired servername.", nargs='?')
+parser.add_argument("-c", "--from-cache", dest="cache",
+                    help="Use cached parsed config.", action="store_true")
+
+arguments = parser.parse_args()
+
+APACHE_CONF_FILE = arguments.input
+OUTPUT_FILE = arguments.output
+DESIRED_VHOST = arguments.servername
+FROM_CACHE = arguments.cache
 
 
 if FROM_CACHE:
@@ -104,8 +116,8 @@ for i in apache_config:
             parse_dict['Rewrites'] = []
             for j in i:
                 if isinstance(j, parse_config.Directive):
-                    if j.name == "ServerName":
-                        if j.args != DESIRED_VHOST:
+                    if DESIRED_VHOST:
+                        if j.name == "ServerName" and j.args != DESIRED_VHOST:
                             break
                     sepatare_server_names("ServerName", j, parse_dict)
                     sepatare_server_aliases("ServerAlias", j, parse_dict)
