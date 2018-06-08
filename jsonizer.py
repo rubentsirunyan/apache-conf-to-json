@@ -105,7 +105,6 @@ for i in apache_config:
             for j in i:
                 if isinstance(j, parse_config.Directive):
                     if j.name == "ServerName":
-                        print("Started to parse {}".format(j.args))
                         if j.args != DESIRED_VHOST:
                             break
                     sepatare_server_names("ServerName", j, parse_dict)
