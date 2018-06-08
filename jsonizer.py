@@ -2,16 +2,24 @@ from parse_apache_configs import parse_config
 import json
 import re
 import sys
+import pickle
 
 
 APACHE_CONF_FILE = sys.argv[1]
 OUTPUT_FILE = sys.argv[2]
 DESIRED_VHOST = str(sys.argv[3])
+FROM_CACHE = False if int(sys.argv[4]) == 0 else True
 
 
-apache_parse_obj = parse_config.ParseApacheConfig(
-    apache_config_path=APACHE_CONF_FILE)
-apache_config = apache_parse_obj.parse_config()
+if FROM_CACHE:
+    with open('data.pkl', 'rb') as f:
+        apache_config = pickle.load(f)
+else:
+    with open('data.pkl', 'wb') as f:
+        apache_parse_obj = parse_config.ParseApacheConfig(
+            apache_config_path=APACHE_CONF_FILE)
+        apache_config = apache_parse_obj.parse_config()
+        pickle.dump(apache_config, f, pickle.HIGHEST_PROTOCOL)
 
 
 def remove_quotes(_str):
