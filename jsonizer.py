@@ -7,7 +7,7 @@ import argparse
 
 parser = argparse.ArgumentParser(description='Jsonify Apache configuration.')
 parser.add_argument("-i", "--input", dest="input",
-                    help="Apache config file path.", nargs='?')
+                    help="Apache config file path.", nargs='?', required=True)
 parser.add_argument("-o", "--output", dest="output",
                     help="Output file.", nargs='?')
 parser.add_argument("-s", "--servername", dest="servername",
@@ -60,7 +60,7 @@ def separate_proxies(directive_name, dir_inst, parse_dict):
         parse_dict['Proxies'].append({
             directive_name: {
                 "From": remove_quotes(tmp_lst[0]),
-                "To": tmp_lst[1]
+                "To": remove_quotes(tmp_lst[1])
             }
         })
 
@@ -73,7 +73,7 @@ def order_rewrites(directive_name, dict_section, dir_inst):
     parse_dict[dict_section].append({
         directive_name: {
             "From": remove_quotes(tmp_lst[0]),
-            "To": tmp_lst[1],
+            "To": remove_quotes(tmp_lst[1]),
             "Flags": flags
         }
     })
@@ -99,7 +99,9 @@ def separate_balancers(tag_inst, parse_dict):
         for directive in tag_inst:
             if isinstance(directive, parse_config.Directive):
                 if 'BalancerMember' in directive.name:
-                    tmp_dict['BalancerMembers'].append(directive.args)
+                    tmp_dict['BalancerMembers'].append(
+                        remove_quotes(directive.args)
+                    )
                     # print({"Name": k.name, "Args": k.args})
         parse_dict['Balancers'].append(tmp_dict)
 
