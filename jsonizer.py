@@ -109,34 +109,59 @@ def separate_balancers(tag_inst, parse_dict):
         parse_dict['Balancers'].append(tmp_dict)
 
 
+def build_dict(inst, vhost=True):
+    if vhost:
+        for j in inst:
+            if isinstance(j, parse_config.Directive):
+                if DESIRED_VHOST:
+                    if j.name == "ServerName" and j.args != DESIRED_VHOST:
+                        break
+                sepatare_server_names("ServerName", j, parse_dict)
+                sepatare_server_aliases("ServerAlias", j, parse_dict)
+                separate_proxies("ProxyPass", j, parse_dict)
+                separate_proxies("ProxyPassReverse", j, parse_dict)
+                separate_rewrites("RewriteRule", j, parse_dict)
+
+            if isinstance(j, parse_config.NestedTags):
+                separate_balancers(j, parse_dict)
+        else:
+            vhost_list.append(parse_dict)
+    else:
+        if isinstance(inst, parse_config.Directive):
+            sepatare_server_names("ServerName", inst, parse_dict_no_vhost)
+            sepatare_server_aliases("ServerAlias", inst, parse_dict_no_vhost)
+            separate_proxies("ProxyPass", inst, parse_dict_no_vhost)
+            separate_proxies("ProxyPassReverse", inst, parse_dict_no_vhost)
+            separate_rewrites("RewriteRule", inst, parse_dict_no_vhost)
+
+        if isinstance(inst, parse_config.NestedTags):
+            separate_balancers(inst, parse_dict_no_vhost)
+
+
 vhost_list = []
+parse_dict_no_vhost = {
+    "Balancers": [],
+    "Server Aliases": [],
+    "Proxies": [],
+    "Rewrites": []
+}
+
 for i in apache_config:
+    parse_dict = {
+        "Balancers": [],
+        "Server Aliases": [],
+        "Proxies": [],
+        "Rewrites": []
+    }
     try:
         if i.close_tag == '</VirtualHost>':
-            parse_dict = {}
-            # print({"Open": i.open_tag, "Close": i.close_tag})
-            parse_dict['Balancers'] = []
-            parse_dict['Server Aliases'] = []
-            parse_dict['Proxies'] = []
-            parse_dict['Rewrites'] = []
-            for j in i:
-                if isinstance(j, parse_config.Directive):
-                    if DESIRED_VHOST:
-                        if j.name == "ServerName" and j.args != DESIRED_VHOST:
-                            break
-                    sepatare_server_names("ServerName", j, parse_dict)
-                    sepatare_server_aliases("ServerAlias", j, parse_dict)
-                    separate_proxies("ProxyPass", j, parse_dict)
-                    separate_proxies("ProxyPassReverse", j, parse_dict)
-                    separate_rewrites("RewriteRule", j, parse_dict)
+            build_dict(i)
+        else:
+            build_dict(i, vhost=False)
+    except AttributeError as e:
+        build_dict(i, vhost=False)
 
-                if isinstance(j, parse_config.NestedTags):
-                    separate_balancers(j, parse_dict)
-            else:
-                vhost_list.append(parse_dict)
-
-    except AttributeError:
-        continue
+vhost_list.append(parse_dict_no_vhost)
 
 with open(OUTPUT_FILE, 'w') as f:
     json.dump(vhost_list, f, ensure_ascii=False)
