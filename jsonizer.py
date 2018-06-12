@@ -65,11 +65,13 @@ def separate_proxies(directive_name, dir_inst, parse_dict):
         })
 
 
-def order_rewrites(directive_name, dict_section, dir_inst):
+def order_rewrites(directive_name, dict_section, dir_inst, flags):
     tmp_lst = list(
         filter(None, re.split(r'(?:(?<!\\) )', dir_inst.args))
     )
-    flags = tmp_lst[2][1:-1].split(',') if len(tmp_lst) > 2 else []
+    if str(flags) in tmp_lst[1]:
+        tmp_lst[1] = tmp_lst[1].split(flags)[0]
+    flags = str(flags)[1:-1].split(',') if len(flags) > 2 else []
     parse_dict[dict_section].append({
         directive_name: {
             "From": remove_quotes(tmp_lst[0]),
@@ -82,13 +84,14 @@ def order_rewrites(directive_name, dict_section, dir_inst):
 def separate_rewrites(directive_name, dir_inst, parse_dict):
     if directive_name in dir_inst.name:
         flags = re.findall(
-            "\[([A-Z]+)(?:=.*)?(?:,([A-Z]+)(?:=.*)?)+?\]", dir_inst.args)
+            "\[(?:[A-Z]+)(?:=.*)?(?:,(?:[A-Z]+)(?:=.*)?)+?\]", dir_inst.args
+        )
         if len(flags) > 0:
             flags = flags[0]
         if 'P' in flags:
-            order_rewrites("RewriteRule", "Proxies", dir_inst)
+            order_rewrites("RewriteRule", "Proxies", dir_inst, flags)
         else:
-            order_rewrites("RewriteRule", "Rewrites", dir_inst)
+            order_rewrites("RewriteRule", "Rewrites", dir_inst, flags)
 
 
 def separate_balancers(tag_inst, parse_dict):
