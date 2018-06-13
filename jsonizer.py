@@ -109,6 +109,37 @@ def separate_balancers(tag_inst, parse_dict):
         parse_dict['Balancers'].append(tmp_dict)
 
 
+def sepatare_anything(dir_inst, parse_dict):
+    managed_directives = [
+        "ServerName",
+        "ServerAlias",
+        "ProxyPass",
+        "ProxyPassReverse",
+        "RewriteRule"
+    ]
+
+    # if dir_inst.name not in managed_directives:
+    #     parse_dict[dir_inst.name] = dir_inst.args
+
+    if dir_inst.name not in managed_directives:
+        if "List of {}".format(dir_inst.name) in parse_dict:
+            parse_dict["List of {}".format(dir_inst.name)].append(
+                {dir_inst.name: dir_inst.args}
+            )
+        else:
+            if dir_inst.name in parse_dict:
+                parse_dict["List of {}".format(dir_inst.name)] = []
+                parse_dict["List of {}".format(dir_inst.name)].append(
+                    {dir_inst.name: parse_dict[dir_inst.name]}
+                )
+                parse_dict["List of {}".format(dir_inst.name)].append(
+                    {dir_inst.name: dir_inst.args}
+                )
+                del parse_dict[dir_inst.name]
+            else:
+                parse_dict[dir_inst.name] = dir_inst.args
+
+
 def build_dict(inst, vhost=True):
     if vhost:
         for j in inst:
@@ -121,6 +152,7 @@ def build_dict(inst, vhost=True):
                 separate_proxies("ProxyPass", j, parse_dict)
                 separate_proxies("ProxyPassReverse", j, parse_dict)
                 separate_rewrites("RewriteRule", j, parse_dict)
+                sepatare_anything(j, parse_dict)
 
             if isinstance(j, parse_config.NestedTags):
                 separate_balancers(j, parse_dict)
@@ -133,6 +165,7 @@ def build_dict(inst, vhost=True):
             separate_proxies("ProxyPass", inst, parse_dict_no_vhost)
             separate_proxies("ProxyPassReverse", inst, parse_dict_no_vhost)
             separate_rewrites("RewriteRule", inst, parse_dict_no_vhost)
+            sepatare_anything(inst, parse_dict)
 
         if isinstance(inst, parse_config.NestedTags):
             separate_balancers(inst, parse_dict_no_vhost)
