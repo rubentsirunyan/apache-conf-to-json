@@ -109,6 +109,17 @@ def separate_balancers(tag_inst, parse_dict):
         parse_dict['Balancers'].append(tmp_dict)
 
 
+def separate_tags(tag_inst, parse_dict):
+    if "List of {}s".format(tag_inst.close_tag[2:-1]) not in parse_dict:
+        parse_dict["List of {}s".format(tag_inst.close_tag[2:-1])] = []
+    tmp_dict = {}
+    tmp_dict["Name"] = remove_quotes(tag_inst.open_tag.split(' ')[1][:-1])
+    for directive in tag_inst:
+        if isinstance(directive, parse_config.Directive):
+            sepatare_anything(directive, tmp_dict)
+    parse_dict["List of {}s".format(tag_inst.close_tag[2:-1])].append(tmp_dict)
+
+
 def sepatare_anything(dir_inst, parse_dict):
     managed_directives = [
         "ServerName",
@@ -155,7 +166,7 @@ def build_dict(inst, vhost=True):
                 sepatare_anything(j, parse_dict)
 
             if isinstance(j, parse_config.NestedTags):
-                separate_balancers(j, parse_dict)
+                separate_tags(j, parse_dict)
         else:
             vhost_list.append(parse_dict)
     else:
@@ -168,7 +179,7 @@ def build_dict(inst, vhost=True):
             sepatare_anything(inst, parse_dict)
 
         if isinstance(inst, parse_config.NestedTags):
-            separate_balancers(inst, parse_dict_no_vhost)
+            separate_tags(inst, parse_dict_no_vhost)
 
 
 vhost_list = []
