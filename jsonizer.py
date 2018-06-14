@@ -103,7 +103,7 @@ def separate_balancers(tag_inst, parse_dict):
             if isinstance(directive, parse_config.Directive):
                 if 'BalancerMember' in directive.name:
                     tmp_dict['BalancerMembers'].append(
-                        remove_quotes(directive.args)
+                        remove_quotes(directive.args.split(' ')[0])
                     )
                     # print({"Name": k.name, "Args": k.args})
         parse_dict['Balancers'].append(tmp_dict)
